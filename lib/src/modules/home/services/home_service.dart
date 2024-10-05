@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:hive/hive.dart';
 import 'package:fast_location/src/shared/storage/storage_keys.dart';
-import 'package:map_launcher/map_launcher.dart'; // Adicionar o pacote map_launcher
-import 'package:geocoding/geocoding.dart'; // Para converter o endereço em coordenadas
+import 'package:map_launcher/map_launcher.dart'; 
+import 'package:geocoding/geocoding.dart'; 
 
 class HomeService {
   final Dio dio;
@@ -10,6 +10,12 @@ class HomeService {
   HomeService(this.dio);
 
   Future<String?> consultarCep(String cep) async {
+    // Validação básica do CEP
+    if (cep.length != 8 || !RegExp(r'^\d+$').hasMatch(cep)) {
+      print('CEP inválido. Deve conter 8 dígitos numéricos.');
+      return null;
+    }
+
     try {
       final response = await dio.get('https://viacep.com.br/ws/$cep/json/');
       if (response.statusCode == 200 && response.data != null) {
@@ -19,6 +25,9 @@ class HomeService {
         await _salvarNoHistorico(endereco);
 
         return endereco;
+      } else {
+        print('Erro: resposta da API não foi 200. Dados: ${response.data}');
+        return null;
       }
     } catch (e) {
       print('Erro ao consultar CEP: $e');
@@ -33,25 +42,31 @@ class HomeService {
 
   // Método para traçar a rota
   Future<void> tracarRota(String endereco) async {
-  try {
-    // Converte o endereço em coordenadas (latitude e longitude)
-    List<Location> locations = await locationFromAddress(endereco);
-
-    // Verifica se o retorno não é nulo e se contém coordenadas
-    if (locations.isNotEmpty) {
-      final location = locations.first;
-
-      // Abre o Google Maps com as coordenadas
-      await MapLauncher.showDirections(
-        mapType: MapType.google,
-        destination: Coords(location.latitude, location.longitude),
-        destinationTitle: endereco,
-      );
-    } else {
-      print('Nenhuma coordenada encontrada para o endereço.');
+    if (endereco.isEmpty) {
+      print('O endereço está vazio.');
+      return;
     }
-  } catch (e) {
-    print('Erro ao traçar rota: $e');
+
+    try {
+      // Converte o endereço em coordenadas (latitude e longitude)
+      List<Location> locations = await locationFromAddress(endereco);
+
+      // Verifica se o retorno não é nulo e se contém coordenadas
+      if (locations.isNotEmpty) {
+        final location = locations.first;
+
+        // Abre o Google Maps com as coordenadas
+        await MapLauncher.showDirections(
+          mapType: MapType.google,
+          destination: Coords(location.latitude, location.longitude),
+          destinationTitle: endereco,
+        );
+        print('Rota traçada com sucesso para $endereco'); // Log de sucesso
+      } else {
+        print('Nenhuma coordenada encontrada para o endereço: $endereco');
+      }
+    } catch (e) {
+      print('Erro ao traçar rota: $e');
+    }
   }
-}
 }

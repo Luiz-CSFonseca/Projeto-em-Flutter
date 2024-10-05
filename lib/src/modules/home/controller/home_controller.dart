@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 import 'package:fast_location/src/modules/home/services/home_service.dart';
 
@@ -20,36 +21,49 @@ abstract class _HomeControllerBase with Store {
 
   // Função para consultar o CEP
   @action
-  Future<void> consultarCep(String cep) async {
-    isLoading = true;  // Ativa o estado de carregamento
-    errorMessage = null;  // Limpa possíveis mensagens de erro
-    enderecoConsultado = null;  // Limpa o último endereço consultado
+Future<void> consultarCep(String cep, BuildContext context) async {
+  print("Iniciando a consulta do CEP: $cep");
+  isLoading = true;
+  errorMessage = null;
+  enderecoConsultado = null;
 
-    try {
-      final resultado = await _service.consultarCep(cep);
-      if (resultado != null) {
-        enderecoConsultado = resultado;
-      } else {
-        errorMessage = "CEP não encontrado!";
-      }
-    } catch (e) {
-      errorMessage = "Erro ao consultar o CEP: $e";  // Inclui detalhes do erro
-    } finally {
-      isLoading = false;  // Desativa o estado de carregamento após a consulta
+  try {
+    final resultado = await _service.consultarCep(cep);
+    if (resultado != null) {
+      enderecoConsultado = resultado; // Atualiza o estado
+      print("Endereço consultado: $enderecoConsultado");
+    } else {
+      errorMessage = "CEP não encontrado!";
+      print(errorMessage);
     }
+  } catch (e) {
+    errorMessage = "Erro ao consultar o CEP: $e";
+    print(errorMessage);
+  } finally {
+    isLoading = false; 
+    print("Consulta do CEP finalizada.");
   }
+}
+
 
   // Função para traçar a rota
   @action
   Future<void> tracarRota() async {
-  if (enderecoConsultado != null) {
-    try {
-      print("Traçando rota para: $enderecoConsultado"); // Verifique aqui
-      await _service.tracarRota(enderecoConsultado!);
-    } catch (e) {
-      print("Erro ao traçar rota: $e");
+    if (enderecoConsultado != null) {
+      try {
+        print("Traçando rota para: $enderecoConsultado"); // Log do endereço para traçar a rota
+        await _service.tracarRota(enderecoConsultado!);
+        print("Rota traçada com sucesso."); // Log de sucesso na trajetória da rota
+      } catch (e) {
+        print("Erro ao traçar rota: $e"); // Log do erro se a trajetória falhar
+      }
+    } else {
+      print("Nenhum endereço consultado para traçar a rota."); // Log se não houver endereço
     }
   }
-}
 
+  // Função para esconder o teclado
+  void esconderTeclado(BuildContext context) {
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
 }

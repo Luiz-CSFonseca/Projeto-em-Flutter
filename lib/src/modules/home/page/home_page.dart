@@ -16,17 +16,17 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fast Location'),
-        backgroundColor: Colors.green, // Cor do AppBar
+        backgroundColor: Colors.green,
       ),
-      body: SingleChildScrollView( // Adiciona o SingleChildScrollView aqui
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Centraliza verticalmente
-            crossAxisAlignment: CrossAxisAlignment.center, // Centraliza horizontalmente
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Icon(
-                Icons.location_on, // Ícone de localização
+                Icons.location_on,
                 size: 60,
                 color: Colors.green,
               ),
@@ -43,7 +43,7 @@ class _HomePageState extends State<HomePage> {
                 decoration: InputDecoration(
                   labelText: 'Digite o CEP',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10), // Borda arredondada
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -52,7 +52,8 @@ class _HomePageState extends State<HomePage> {
                 onPressed: () async {
                   String cep = _cepController.text;
                   if (cep.isNotEmpty && cep.length == 8) {
-                    await _controller.consultarCep(cep);
+                    FocusScope.of(context).unfocus(); // Fecha o teclado
+                    await _controller.consultarCep(cep, context);
                     _cepController.clear(); // Limpa o campo de texto após a consulta
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -60,12 +61,12 @@ class _HomePageState extends State<HomePage> {
                     );
                   }
                 },
-                icon: const Icon(Icons.search), // Ícone no botão
+                icon: const Icon(Icons.search),
                 label: const Text('Localizar endereço'),
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50), // Botão maior
+                  minimumSize: const Size.fromHeight(50),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // Borda arredondada
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
@@ -96,27 +97,35 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _controller.enderecoConsultado != null
-                    ? () async {
-                        await _controller.tracarRota();
-                      }
-                    : null,
-                icon: const Icon(Icons.directions), // Ícone no botão
-                label: const Text('Traçar Rota'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
+              Observer(
+                builder: (_) {
+                  return ElevatedButton.icon(
+                    onPressed: _controller.enderecoConsultado != null && !_controller.isLoading
+                        ? () async {
+                            await _controller.tracarRota();
+                            // Feedback após traçar rota
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Rota traçada com sucesso!')),
+                            );
+                          }
+                        : null,
+                    icon: const Icon(Icons.directions),
+                    label: const Text('Traçar Rota'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () {
                   Navigator.pushNamed(context, '/historico');
                 },
-                icon: const Icon(Icons.history), // Ícone no botão
+                icon: const Icon(Icons.history),
                 label: const Text('Histórico de endereços'),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size.fromHeight(50),

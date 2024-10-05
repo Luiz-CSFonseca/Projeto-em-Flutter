@@ -61,8 +61,9 @@ mixin _$HomeController on _HomeControllerBase, Store {
       AsyncAction('_HomeControllerBase.consultarCep', context: context);
 
   @override
-  Future<void> consultarCep(String cep) {
-    return _$consultarCepAsyncAction.run(() => super.consultarCep(cep));
+  Future<void> consultarCep(String cep, BuildContext context) {
+    return _$consultarCepAsyncAction
+        .run(() => super.consultarCep(cep, context));
   }
 
   late final _$tracarRotaAsyncAction =
